@@ -5,7 +5,7 @@ class PluginProvider(StrEnum):
     NSDL = auto()
     UNISEN = auto()
     DEEPVUE = auto()
-
+    CELL24X7 = auto()
 
 
 class PluginService(StrEnum):
@@ -17,3 +17,4 @@ class PluginService(StrEnum):
     MOBILE_TO_VEHICLE_RC = auto()
     BANK_ACCOUNT_VERIFICATION = auto()
     IFSC_LOOKUP = auto()
+    SMS_NOTIFICATION = auto()

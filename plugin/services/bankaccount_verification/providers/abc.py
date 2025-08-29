@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from ..serializers import (
-    BankAccountVerificationRequestSerializer,
-    BankAccountVerificationResponseSerializer,
+from ..models import ( 
+    BankAccountVerificationRequest,
+    BankAccountVerificationResponse,
 )
 
 if TYPE_CHECKING:
@@ -10,8 +10,11 @@ if TYPE_CHECKING:
 
 
 class AbstractBankAccountVerificationProvider(ABC):
+    def __init__(self, plugin: "Plugin"):
+        self.plugin = plugin
+        
     @abstractmethod
     def verify_bank_account(
-        self, plugin: "Plugin", request: BankAccountVerificationRequestSerializer
-    ) -> BankAccountVerificationResponseSerializer:
+        self, plugin: "Plugin", request: BankAccountVerificationRequest
+    ) -> BankAccountVerificationResponse:
         pass

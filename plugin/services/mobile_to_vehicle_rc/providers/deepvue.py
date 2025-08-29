@@ -2,9 +2,9 @@ import httpx
 from typing import TYPE_CHECKING
 from .abc import AbstractMobileToVehicleRCProvider
 from plugin.utils.deepvue_auth import DeepvueAuth
-from ..serializers import (
-    MobileToVehicleRCRequestSerializer,
-    MobileToVehicleRCResponseSerializer,
+from ..models import (
+    MobileToVehicleRCRequest,
+    MobileToVehicleRCResponse,
 )
 
 if TYPE_CHECKING:
@@ -14,14 +14,14 @@ if TYPE_CHECKING:
 class DEEPVUE(AbstractMobileToVehicleRCProvider):
     BASE_URL = "https://production.deepvue.tech"
 
-    def __init__(self, client_id: str, client_secret: str):
-        self.auth = DeepvueAuth(client_id, client_secret)
+    def __init__(self, plugin: "Plugin"):
+        self.auth = DeepvueAuth(plugin.client_id, plugin.client_secret)
 
     def fetch_vehicle_rc(
-        self, plugin: "Plugin", request: MobileToVehicleRCRequestSerializer
-    ) -> MobileToVehicleRCResponseSerializer:
+        self, plugin: "Plugin", request: MobileToVehicleRCRequest
+    ) -> MobileToVehicleRCResponse:
         try:
-            mobile_number = request.validated_data["mobile_number"]
+            mobile_number = request.mobile_number
 
             response_data = self.auth.make_request(
                 "GET",
@@ -40,16 +40,11 @@ class DEEPVUE(AbstractMobileToVehicleRCProvider):
                 "data": response_data.get("data"),
             }
 
-            serializer = MobileToVehicleRCResponseSerializer(data=response_payload)
-            serializer.is_valid(raise_exception=True)
-            return serializer.data
+            return MobileToVehicleRCResponse(**response_payload)
 
         except Exception as e:
-            error_response = {
-                "success": False,
-                "message": f"Mobile-to-RC fetch failed: {str(e)}",
-                "provider": "deepvue",
-            }
-            serializer = MobileToVehicleRCResponseSerializer(data=error_response)
-            serializer.is_valid()
-            return serializer.data
+            return MobileToVehicleRCResponse(
+                success=False,
+                message=f"Mobile-to-RC fetch failed: {str(e)}",
+                provider="deepvue",
+            )

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from ..serializers import (
-    MobileToVehicleRCRequestSerializer,
-    MobileToVehicleRCResponseSerializer,
+from ..models import (
+    MobileToVehicleRCRequest,
+    MobileToVehicleRCResponse,
 )
 
 if TYPE_CHECKING:
@@ -10,8 +10,11 @@ if TYPE_CHECKING:
 
 
 class AbstractMobileToVehicleRCProvider(ABC):
+    def __init__(self, plugin: "Plugin"):
+        self.plugin = plugin
+
     @abstractmethod
     def fetch_vehicle_rc(
-        self, plugin: "Plugin", request: MobileToVehicleRCRequestSerializer
-    ) -> MobileToVehicleRCResponseSerializer:
+        self, plugin: "Plugin", request: MobileToVehicleRCRequest
+    ) -> MobileToVehicleRCResponse:
         pass

@@ -2,9 +2,9 @@ import httpx
 from typing import TYPE_CHECKING
 from .abc import AbstractDrivingLicenseVerificationProvider
 from plugin.utils.deepvue_auth import DeepvueAuth
-from ..serializers import (
-    DrivingLicenseVerificationRequestSerializer,
-    DrivingLicenseVerificationResponseSerializer,
+from ..models import (
+    DrivingLicenseVerificationRequest,
+    DrivingLicenseVerificationResponse,
 )
 
 if TYPE_CHECKING:
@@ -14,43 +14,46 @@ if TYPE_CHECKING:
 class DEEPVUE(AbstractDrivingLicenseVerificationProvider):
     BASE_URL = "https://production.deepvue.tech"
 
-    def __init__(self, client_id: str, client_secret: str):
-        self.auth = DeepvueAuth(client_id, client_secret)
+    def __init__(self, plugin: "Plugin"):
+        self.auth = DeepvueAuth(plugin.client_id, plugin.client_secret)
 
     def verify_driving_license(
-        self, plugin: "Plugin", request: DrivingLicenseVerificationRequestSerializer
-    ) -> DrivingLicenseVerificationResponseSerializer:
+        self, plugin: "Plugin", request: DrivingLicenseVerificationRequest
+    ) -> DrivingLicenseVerificationResponse:
         try:
-            dl_number = request.validated_data["dl_number"]
-            dob = request.validated_data["dob"]
-
             post_result = self.auth.make_request(
                 "POST",
                 "/v1/verification/post-driving-license",
-                params={"dl_number": dl_number, "dob": str(dob)},
+                params=request.model_dump(),
             )
-            
-            
+
             request_id = post_result.get("request_id")
             if not request_id:
-                return {"success": False, "message": "No request_id returned", "provider": "deepvue"}
+                return DrivingLicenseVerificationResponse(
+                    success=False,
+                    message="No request_id returned",
+                    provider="deepvue",
+                )
 
+            # Step 2: Fetch result
             get_result = self.auth.make_request(
                 "GET",
                 "/v1/verification/get-driving-license",
                 params={"request_id": request_id},
             )
-            
 
             if not isinstance(get_result, list) or not get_result:
-                return {"success": False, "message": "Invalid response format", "provider": "deepvue"}
+                return DrivingLicenseVerificationResponse(
+                    success=False,
+                    message="Invalid response format",
+                    provider="deepvue",
+                )
 
             result_data = get_result[0].get("result", {}).get("source_output", {})
 
             response_payload = {
                 "success": True,
                 "message": "Driving license verified successfully",
-                "provider": "deepvue",
                 "request_id": request_id,
                 "id_number": result_data.get("id_number"),
                 "name": result_data.get("name"),
@@ -67,12 +70,11 @@ class DEEPVUE(AbstractDrivingLicenseVerificationProvider):
                 "cov_details": result_data.get("cov_details"),
             }
 
-            serializer = DrivingLicenseVerificationResponseSerializer(data=response_payload)
-            serializer.is_valid(raise_exception=True)
-            return serializer.data
+            return DrivingLicenseVerificationResponse(**response_payload)
 
         except Exception as e:
-            error_response = {"success": False, "message": f"Verification failed: {str(e)}", "provider": "deepvue"}
-            serializer = DrivingLicenseVerificationResponseSerializer(data=error_response)
-            serializer.is_valid()
-            return serializer.data
+            return DrivingLicenseVerificationResponse(
+                success=False,
+                message=f"Driving license verification failed: {str(e)}",
+                provider="deepvue",
+            )

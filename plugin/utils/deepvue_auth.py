@@ -19,24 +19,23 @@ class DeepvueAuth:
             "client_secret": self.client_secret,
         }
 
-        try:
-            resp = httpx.post(url, data=data)
-            resp.raise_for_status()
-            body = resp.json()
+        
+        resp = httpx.post(url, data=data)
+        resp.raise_for_status()
+        body = resp.json()
 
-            self._access_token = body.get("access_token")
-            expiry = body.get("expiry")
-            if expiry == "24hrs":
-                self._token_expiry = int(time.time()) + (24 * 60 * 60)
-            elif expiry and str(expiry).isdigit():
-                self._token_expiry = int(time.time()) + int(expiry)
-            else:
-                self._token_expiry = int(time.time()) + (23 * 60 * 60)
+        self._access_token = body.get("access_token")
+        expiry = body.get("expiry")
+        if expiry == "24hrs":
+            self._token_expiry = int(time.time()) + (24 * 60 * 60)
+        elif expiry and str(expiry).isdigit():
+            self._token_expiry = int(time.time()) + int(expiry)
+        else:
+            self._token_expiry = int(time.time()) + (23 * 60 * 60)
 
-            return True if self._access_token else False
+        return True if self._access_token else False
 
-        except Exception:
-            return False
+       
 
     def get_access_token(self) -> Optional[str]:
         if not self._access_token or (

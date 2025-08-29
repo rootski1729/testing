@@ -15,28 +15,60 @@ from pydantic import ValidationError
 from plugin.utils.plugin_factory import PluginFactory
 
 from django.db import IntegrityError
-from plugin.services.vechile_rc_validation.vechile_rc_serializer import (VehicleRCVerificationRequestSerializer,
+from plugin.services.vechile_rc_validation.serializers import (VehicleRCVerificationRequestSerializer,
                                                                         VehicleRCVerificationResponseSerializer)
+
+from plugin.services.vechile_rc_validation.models import (VehicleRCVerificationRequest,
+                                                        VehicleRCVerificationResponse)
 
 from plugin.services.aadhaar_verification.serializers import (AadhaarOTPGenerateRequestSerializer,
                                                             AadhaarOTPGenerateResponseSerializer,
                                                             AadhaarOTPVerifyRequestSerializer,
                                                             AadhaarVerificationResponseSerializer)
 
+from plugin.services.aadhaar_verification.models import (
+    AadhaarOTPGenerateRequest,
+    AadhaarOTPGenerateResponse,
+    AadhaarOTPVerifyRequest,
+    AadhaarVerificationResponse
+)
+
 from plugin.services.driving_license.serializers import(DrivingLicenseVerificationRequestSerializer,
                                                         DrivingLicenseVerificationResponseSerializer)
+
+from plugin.services.driving_license.models import (
+    DrivingLicenseVerificationRequest,
+    DrivingLicenseVerificationResponse
+)
 
 from plugin.services.pan_validation.serializers import (PANVerificationRequestSerializer,
                                                     PANVerificationResponseSerializer)
 
+from plugin.services.pan_validation.models import (PANVerificationRequest,
+                                                PANVerificationResponse)
+
 from plugin.services.mobile_to_vehicle_rc.serializers import (MobileToVehicleRCRequestSerializer,
                                                             MobileToVehicleRCResponseSerializer)
+
+
+from plugin.services.mobile_to_vehicle_rc.models import (MobileToVehicleRCRequest,
+                                                        MobileToVehicleRCResponse)
 
 from plugin.services.bankaccount_verification.serializers import (BankAccountVerificationRequestSerializer,
                                                                 BankAccountVerificationResponseSerializer)
 
+from plugin.services.bankaccount_verification.models import (BankAccountVerificationRequest,
+                                                            BankAccountVerificationResponse
+                                                            )
+
 from plugin.services.ifsc_lookup.serializers import (IFSCVerificationRequestSerializer,
                                                     IFSCVerificationResponseSerializer)
+
+from plugin.services.ifsc_lookup.models import (IFSCVerificationRequest, IFSCVerificationResponse)
+
+from plugin.services.sms_notification.serializers import (SMSNotificationRequestSerializer, SMSNotificationResponseSerializer)
+from plugin.services.sms_notification.models import (SMSRequest, SMSResponse)
+
 class PluginViewSet(PermissionScopedViewSet):
     modules = [Module.PLUGIN]
     queryset = Plugin.objects.all()
@@ -86,7 +118,7 @@ class PluginViewSet(PermissionScopedViewSet):
 
 class VehicleRCVerificationView(PermissionScopedViewSet):
     modules = [Module.PLUGIN] 
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny] #TODO
     queryset = Plugin.objects.all()
     lookup_field = "uid"
 
@@ -102,34 +134,28 @@ class VehicleRCVerificationView(PermissionScopedViewSet):
         },
     )
 
-
     def create(self, request, *args, **kwargs):
         try:
             plugin = Plugin.objects.get(uid=kwargs.get('uid'))
-            req_serializer = VehicleRCVerificationRequestSerializer(data=request.data)
-            req_serializer.is_valid(raise_exception=True)
-
-    
-            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
-            provider = provider_class(plugin.client_id, plugin.client_secret)
-
-
-            resp_data = provider.verify_rc(plugin, req_serializer)
-
-
-            resp_serializer = VehicleRCVerificationResponseSerializer(data=resp_data)
-            resp_serializer.is_valid(raise_exception=True)
-
-            return Response(resp_serializer.data, status=status.HTTP_200_OK)
-
         except Plugin.DoesNotExist:
             return Response(
                 {"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND
             )
-        except Exception as e:
-            return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        try:
+
+            req = VehicleRCVerificationRequest(**request.data)
+            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
+            provider = provider_class(plugin)
+
+
+            resp = provider.verify_rc(plugin, req)
+
+            return Response(resp.dict(), status=status.HTTP_200_OK)
+
+        except ValidationError as ve:
+            return Response({"errors": ve.detail}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
             
 
 
@@ -150,26 +176,23 @@ class AadhaarVerificationViewSet(PermissionScopedViewSet):
     def generate_otp(self, request, *args, **kwargs):
         try:
             plugin = self.get_object()
-            serializer = AadhaarOTPGenerateRequestSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
-            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
-        
-            
-            provider = provider_class(plugin.client_id, plugin.client_secret)
-            
-            
-            # Check if method exists
-            resp_data = provider.generate_otp(plugin, serializer.validated_data)
-            response_serializer = AadhaarOTPGenerateResponseSerializer(data=resp_data)
-            response_serializer.is_valid(raise_exception=True)
-
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
-
         except Plugin.DoesNotExist:
             return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        try:
+            req_model = AadhaarOTPGenerateRequest(**request.data)
+
+            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
+            provider = provider_class(plugin)
+
+            resp_model: AadhaarOTPGenerateResponse = provider.generate_otp(plugin, req_model)
+
+            return Response(resp_model.dict(), status=status.HTTP_200_OK)
+
+        except ValidationError as ve:
+            return Response({"errors": ve.errors()}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
     @swagger_auto_schema(
         operation_summary="Verify Aadhaar OTP",
@@ -182,26 +205,21 @@ class AadhaarVerificationViewSet(PermissionScopedViewSet):
     def verify_otp(self, request, *args, **kwargs):
         try:
             plugin = self.get_object()
-            serializer = AadhaarOTPVerifyRequestSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
-            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
-            provider = provider_class(plugin.client_id, plugin.client_secret)
-
-            resp_data = provider.verify_otp(plugin, serializer.validated_data)
-
-            response_serializer = AadhaarVerificationResponseSerializer(data=resp_data)
-            response_serializer.is_valid(raise_exception=True)
-
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
-
         except Plugin.DoesNotExist:
             return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        
-        
+        try:
+            req_model = AadhaarOTPVerifyRequest(**request.data)
+
+            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
+            provider = provider_class(plugin)
+
+            resp_model: AadhaarVerificationResponse = provider.verify_otp(plugin, req_model)
+
+            return Response(resp_model.dict(), status=status.HTTP_200_OK)
+
+        except ValidationError as ve:
+            return Response({"errors": ve.errors()}, status=status.HTTP_400_BAD_REQUEST)
+
 class DrivingLicenseVerificationViewSet(PermissionScopedViewSet):
     modules = [Module.PLUGIN]
     queryset = Plugin.objects.all()
@@ -222,21 +240,22 @@ class DrivingLicenseVerificationViewSet(PermissionScopedViewSet):
     def verify_driving_license(self, request, *args, **kwargs):
         try:
             plugin = self.get_object()
-            serializer = DrivingLicenseVerificationRequestSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
-            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
-            provider = provider_class(plugin.client_id, plugin.client_secret)
-
-            
-            resp_data = provider.verify_driving_license(plugin, serializer)
-
-            return Response(resp_data, status=status.HTTP_200_OK)
-
         except Plugin.DoesNotExist:
             return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        try:
+            req = DrivingLicenseVerificationRequest(**request.data)
+
+            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
+            provider = provider_class(plugin)
+
+            resp = provider.verify_driving_license(plugin, req)
+
+            return Response(resp.model_dump(), status=status.HTTP_200_OK)
+
+        except ValidationError as ve:
+            return Response({"errors": ve.errors()}, status=status.HTTP_400_BAD_REQUEST)
+
         
         
 class PANVerificationViewSet(PermissionScopedViewSet):
@@ -259,24 +278,22 @@ class PANVerificationViewSet(PermissionScopedViewSet):
     def verify_pan(self, request, *args, **kwargs):
         try:
             plugin = self.get_object()
-
-            serializer = PANVerificationRequestSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+        except Plugin.DoesNotExist:
+            return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            req = PANVerificationRequest(**request.data)
 
             provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
-            provider = provider_class(plugin.client_id, plugin.client_secret)
+            provider = provider_class(plugin)
 
-        
-            resp_data = provider.validate_pan(plugin, serializer)
+            resp = provider.validate_pan(plugin, req)
 
-            return Response(resp_data, status=status.HTTP_200_OK)
+            return Response(resp.dict(), status=status.HTTP_200_OK)
 
         except ValidationError as ve:
             return Response({"errors": ve.detail}, status=status.HTTP_400_BAD_REQUEST)
-        except Plugin.DoesNotExist:
-            return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
         
 
@@ -296,23 +313,24 @@ class MobileToVehicleRCViewSet(PermissionScopedViewSet):
     def fetch_vehicle_rc(self, request, *args, **kwargs):
         try:
             plugin = self.get_object()
+        
+        except Plugin.DoesNotExist:
+            return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
 
-            serializer = MobileToVehicleRCRequestSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+            req = MobileToVehicleRCRequest(**request.data)
 
             provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
-            provider = provider_class(plugin.client_id, plugin.client_secret)
+            provider = provider_class(plugin)
 
-            resp_data = provider.fetch_vehicle_rc(plugin, serializer)
+            resp = provider.fetch_vehicle_rc(plugin, req)
 
-            return Response(resp_data, status=status.HTTP_200_OK)
+            return Response(resp.dict(), status=status.HTTP_200_OK)
 
         except ValidationError as ve:
             return Response({"errors": ve.detail}, status=status.HTTP_400_BAD_REQUEST)
-        except Plugin.DoesNotExist:
-            return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 
 
 class BankAccountVerificationViewSet(PermissionScopedViewSet):
@@ -330,24 +348,21 @@ class BankAccountVerificationViewSet(PermissionScopedViewSet):
     def verify_bank_account(self, request, *args, **kwargs):
         try:
             plugin = self.get_object()
-
-            serializer = BankAccountVerificationRequestSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
-            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
-            provider = provider_class(plugin.client_id, plugin.client_secret)
-
-            resp_data = provider.verify_bank_account(plugin, serializer)
-
-            return Response(resp_data, status=status.HTTP_200_OK)
-
-        except ValidationError as ve:
-            return Response({"errors": ve.detail}, status=status.HTTP_400_BAD_REQUEST)
         except Plugin.DoesNotExist:
             return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+        try:
+            req = BankAccountVerificationRequest(**request.data)
+
+            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
+            provider = provider_class(plugin)
+
+            resp = provider.verify_bank_account(plugin, req)
+
+            return Response(resp.dict(), status=status.HTTP_200_OK)
+
+        except ValidationError as ve:
+            return Response({"errors": ve.errors()}, status=status.HTTP_400_BAD_REQUEST)
     
 class IfscLookUpViewSet(PermissionScopedViewSet):
     modules = [Module.PLUGIN]
@@ -364,21 +379,54 @@ class IfscLookUpViewSet(PermissionScopedViewSet):
     def verify_ifsc(self, request, *args, **kwargs):
         try:
             plugin = self.get_object()
-
-            serializer = IFSCVerificationRequestSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
+        except Plugin.DoesNotExist:
+            return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            req = IFSCVerificationRequest(**request.data)
 
             provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
-            provider = provider_class(plugin.client_id, plugin.client_secret)
+            provider = provider_class(plugin)
 
-            resp_data = provider.verify_ifsc(plugin, serializer)
+            resp = provider.verify_ifsc(plugin, req)
 
-            return Response(resp_data, status=status.HTTP_200_OK)
+            return Response(resp.dict(), status=status.HTTP_200_OK)
 
         except ValidationError as ve:
             return Response({"errors": ve.detail}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        
+class SMSViewSet(PermissionScopedViewSet):
+    modules = [Module.PLUGIN]
+    queryset = Plugin.objects.all()
+    lookup_field = "uid"
+
+    @swagger_auto_schema(
+        operation_summary="Send SMS using Cell24x7",
+        operation_description="Send transactional or promotional SMS via Cell24x7 provider",
+        request_body=SMSNotificationRequestSerializer,
+        responses={200: SMSNotificationResponseSerializer, 400: "Bad Request", 404: "Plugin not found"},
+    )
+    @action(detail=True, methods=["post"], url_path="send-sms", url_name="send-sms")
+    def send_sms(self, request, *args, **kwargs):
+        try:
+            plugin = self.get_object()
         except Plugin.DoesNotExist:
             return Response({"error": "Plugin not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        try:
+        
+            req = SMSRequest(**request.data)
+
+       
+            provider_class = PluginFactory.get_provider_class(plugin.provider, plugin.service)
+            provider = provider_class(plugin)
+
+
+            resp = provider.send_sms(plugin, req)
+
+            return Response(resp.dict(), status=status.HTTP_200_OK)
+
+        except ValidationError as ve:
+            return Response({"errors": ve.errors()}, status=status.HTTP_400_BAD_REQUEST)

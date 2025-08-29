@@ -1,17 +1,20 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from ..vechile_rc_serializer import (VehicleRCVerificationRequestSerializer,
-                                    VehicleRCVerificationResponseSerializer)
+from ..models import (
+    VehicleRCVerificationRequest,
+    VehicleRCVerificationResponse,
+)
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
 
 
 class AbstractVehicleRCVerificationProvider(ABC):
+    def __init__(self, plugin: "Plugin"):
+        self.plugin = plugin
 
     @abstractmethod
     def verify_rc(
-        self, plugin: "Plugin", request: VehicleRCVerificationRequestSerializer
-    ) -> VehicleRCVerificationResponseSerializer:
-    
+        self, plugin: "Plugin", request: VehicleRCVerificationRequest
+    ) -> VehicleRCVerificationResponse:
         pass

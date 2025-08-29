@@ -8,6 +8,8 @@ from plugin.services.mobile_to_vehicle_rc import providers as MobileToVehicleRCP
 from plugin.services.bankaccount_verification import providers as BankAccountVerificationProviders
 from plugin.services.ifsc_lookup import providers as IFSCProviders
 
+from plugin.services.sms_notification import providers as SMSProviders
+
 
 class PluginFactory:
     _registry = {
@@ -20,6 +22,8 @@ class PluginFactory:
         (PluginProvider.DEEPVUE, PluginService.MOBILE_TO_VEHICLE_RC): MobileToVehicleRCProviders.DEEPVUE,
         (PluginProvider.DEEPVUE, PluginService.BANK_ACCOUNT_VERIFICATION): BankAccountVerificationProviders.DEEPVUE,
         (PluginProvider.DEEPVUE, PluginService.IFSC_LOOKUP): IFSCProviders.DEEPVUE,
+
+        (PluginProvider.CELL24X7, PluginService.SMS_NOTIFICATION): SMSProviders.Cell,
         # … add more
     }
 

@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from ..serializers import (
-    AadhaarOTPGenerateRequestSerializer, AadhaarOTPGenerateResponseSerializer,
-    AadhaarOTPVerifyRequestSerializer, AadhaarVerificationResponseSerializer
-    
+from ..models import (
+    AadhaarOTPGenerateRequest, AadhaarOTPGenerateResponse,
+    AadhaarOTPVerifyRequest, AadhaarVerificationResponse
 )
 
 if TYPE_CHECKING:
@@ -11,14 +10,13 @@ if TYPE_CHECKING:
 
 
 class AbstractAadhaarVerificationProvider(ABC):
-    """Abstract base class for Aadhaar verification providers - 2-step process"""
+    
     
     @abstractmethod
-    def generate_otp(self, plugin: "Plugin", request: AadhaarOTPGenerateRequestSerializer) -> AadhaarOTPGenerateResponseSerializer:
-        
+    def generate_otp(self, plugin: "Plugin", request: AadhaarOTPGenerateRequest) -> AadhaarOTPGenerateResponse:
         pass
     
     @abstractmethod
-    def verify_otp(self, plugin: "Plugin", request: AadhaarOTPVerifyRequestSerializer) -> AadhaarVerificationResponseSerializer:
+    def verify_otp(self, plugin: "Plugin", request: AadhaarOTPVerifyRequest) -> AadhaarVerificationResponse:
         
         pass
