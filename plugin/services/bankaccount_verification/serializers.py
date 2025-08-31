@@ -17,7 +17,9 @@ class BankAccountVerificationResponseSerializer(serializers.Serializer):
     transaction_id = serializers.CharField(required=False, allow_blank=True)
 
     account_exists = serializers.BooleanField(required=False, allow_null=True)
-    name_at_bank = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    name_at_bank = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     utr = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     amount_deposited = serializers.IntegerField(required=False, allow_null=True)
 

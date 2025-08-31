@@ -1,11 +1,12 @@
-import httpx
 from typing import TYPE_CHECKING
-from .abc import AbstractVehicleRCVerificationProvider
+
+import httpx
+
+from plugin.utils.cache_decorator import auto_cached_provider_method
 from plugin.utils.deepvue_auth import DeepvueAuth
-from ..models import (
-    VehicleRCVerificationRequest,
-    VehicleRCVerificationResponse,
-)
+
+from ..models import VehicleRCVerificationRequest, VehicleRCVerificationResponse
+from .abc import AbstractVehicleRCVerificationProvider
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
@@ -18,7 +19,8 @@ class DEEPVUE(AbstractVehicleRCVerificationProvider):
     def __init__(self, plugin: "Plugin"):
         self.auth = DeepvueAuth(plugin.client_id, plugin.client_secret)
 
-    def verify_rc(
+    @auto_cached_provider_method()
+    def run(
         self, plugin: "Plugin", request: VehicleRCVerificationRequest
     ) -> VehicleRCVerificationResponse:
         try:

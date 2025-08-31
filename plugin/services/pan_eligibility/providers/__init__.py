@@ -1,5 +1,3 @@
-from .unisen import Unisen
+from .unisen import UNISEN
 
-__all__ = [
-    "Unisen"
-]
+__all__ = ["UNISEN"]

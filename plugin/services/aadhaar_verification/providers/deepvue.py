@@ -1,10 +1,16 @@
+from typing import TYPE_CHECKING, Any, Dict
+
 import httpx
-from typing import TYPE_CHECKING, Dict, Any
-from .abc import AbstractAadhaarVerificationProvider
+
+from plugin.utils.cache_decorator import auto_cached_provider_method
+
 from ..models import (
-    AadhaarOTPGenerateRequest, AadhaarOTPGenerateResponse,
-    AadhaarOTPVerifyRequest, AadhaarVerificationResponse,
+    AadhaarOTPGenerateRequest,
+    AadhaarOTPGenerateResponse,
+    AadhaarOTPVerifyRequest,
+    AadhaarVerificationResponse,
 )
+from .abc import AbstractAadhaarVerificationProvider
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
@@ -17,7 +23,9 @@ class DEEPVUE(AbstractAadhaarVerificationProvider):
         self.client_id = plugin.client_id
         self.client_secret = plugin.client_secret
 
-    def _make_request(self, method: str, endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def _make_request(
+        self, method: str, endpoint: str, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Helper for making requests to Deepvue API
         Deepvue requires query params (not JSON body).
@@ -46,7 +54,9 @@ class DEEPVUE(AbstractAadhaarVerificationProvider):
     ) -> AadhaarOTPGenerateResponse:
         try:
             payload = request.dict()
-            result = self._make_request("POST", "/v2/ekyc/aadhaar/generate-otp", payload)
+            result = self._make_request(
+                "POST", "/v2/ekyc/aadhaar/generate-otp", payload
+            )
 
             return AadhaarOTPGenerateResponse(
                 success=(result.get("sub_code") == "SUCCESS"),
@@ -59,6 +69,7 @@ class DEEPVUE(AbstractAadhaarVerificationProvider):
         except Exception as e:
             return AadhaarOTPGenerateResponse(success=False, message=str(e))
 
+    @auto_cached_provider_method(exclude_fields=["otp", "reference_id"])
     def verify_otp(
         self, plugin: "Plugin", request: AadhaarOTPVerifyRequest
     ) -> AadhaarVerificationResponse:

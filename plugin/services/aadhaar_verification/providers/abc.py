@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+
 from ..models import (
-    AadhaarOTPGenerateRequest, AadhaarOTPGenerateResponse,
-    AadhaarOTPVerifyRequest, AadhaarVerificationResponse
+    AadhaarOTPGenerateRequest,
+    AadhaarOTPGenerateResponse,
+    AadhaarOTPVerifyRequest,
+    AadhaarVerificationResponse,
 )
 
 if TYPE_CHECKING:
@@ -10,13 +13,16 @@ if TYPE_CHECKING:
 
 
 class AbstractAadhaarVerificationProvider(ABC):
-    
-    
+
     @abstractmethod
-    def generate_otp(self, plugin: "Plugin", request: AadhaarOTPGenerateRequest) -> AadhaarOTPGenerateResponse:
+    def generate_otp(
+        self, plugin: "Plugin", request: AadhaarOTPGenerateRequest
+    ) -> AadhaarOTPGenerateResponse:
         pass
-    
+
     @abstractmethod
-    def verify_otp(self, plugin: "Plugin", request: AadhaarOTPVerifyRequest) -> AadhaarVerificationResponse:
-        
+    def verify_otp(
+        self, plugin: "Plugin", request: AadhaarOTPVerifyRequest
+    ) -> AadhaarVerificationResponse:
+
         pass

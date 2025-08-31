@@ -1,4 +1,3 @@
 from .cell import Cell
 
-__all__ = [
-    "Cell"]
+__all__ = ["Cell"]

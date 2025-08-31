@@ -1,8 +1,10 @@
-from .abc import AbstractPANValidationProvider
 from typing import TYPE_CHECKING
+
+from .abc import AbstractPANValidationProvider
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
+
 
 class NSDL(AbstractPANValidationProvider):
 

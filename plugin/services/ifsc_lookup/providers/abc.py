@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+
 from ..models import IFSCVerificationRequest, IFSCVerificationResponse
 
 if TYPE_CHECKING:
@@ -11,7 +12,7 @@ class AbstractIFSCVerificationProvider(ABC):
         self.plugin = plugin
 
     @abstractmethod
-    def verify_ifsc(
+    def run(
         self, plugin: "Plugin", request: IFSCVerificationRequest
     ) -> IFSCVerificationResponse:
         pass

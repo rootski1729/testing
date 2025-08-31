@@ -1,8 +1,12 @@
 from typing import TYPE_CHECKING
+
 import httpx
+
+from plugin.utils.cache_decorator import auto_cached_provider_method
+from plugin.utils.deepvue_auth import DeepvueAuth
+
 from ..models import PANVerificationRequest, PANVerificationResponse
 from .abc import AbstractPANValidationProvider
-from plugin.utils.deepvue_auth import DeepvueAuth
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
@@ -14,7 +18,8 @@ class DEEPVUE(AbstractPANValidationProvider):
     def __init__(self, plugin: "Plugin"):
         self.auth = DeepvueAuth(plugin.client_id, plugin.client_secret)
 
-    def validate_pan(
+    @auto_cached_provider_method()
+    def run(
         self, plugin: "Plugin", request: PANVerificationRequest
     ) -> PANVerificationResponse:
         try:
@@ -35,7 +40,6 @@ class DEEPVUE(AbstractPANValidationProvider):
                 request_id=result.get("transaction_id"),
                 transaction_id=result.get("transaction_id"),
                 sub_code=result.get("sub_code"),
-
                 pan_number=data.get("pan_number"),
                 full_name=data.get("full_name"),
                 full_name_split=data.get("full_name_split"),
@@ -47,4 +51,6 @@ class DEEPVUE(AbstractPANValidationProvider):
             )
 
         except Exception as e:
-            return PANVerificationResponse(success=False, message=f"PAN validation failed: {str(e)}")
+            return PANVerificationResponse(
+                success=False, message=f"PAN validation failed: {str(e)}"
+            )

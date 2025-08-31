@@ -1,17 +1,17 @@
 from rest_framework import serializers
 
 
-
 class IFSCVerificationRequestSerializer(serializers.Serializer):
     ifsc = serializers.CharField(required=True, max_length=11)
 
-    
 
 class IFSCVerificationResponseSerializer(serializers.Serializer):
     message = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     code = serializers.IntegerField(required=False, allow_null=True)
     sub_code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    transaction_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    transaction_id = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
     MICR = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     BRANCH = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     ADDRESS = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -29,4 +29,3 @@ class IFSCVerificationResponseSerializer(serializers.Serializer):
     BANK = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     BANKCODE = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     IFSC = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-

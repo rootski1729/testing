@@ -1,9 +1,12 @@
 from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class PANVerificationRequest(BaseModel):
-    pan_number: str = Field(..., min_length=10, max_length=10, description="10-character PAN number")
+    pan_number: str = Field(
+        ..., min_length=10, max_length=10, description="10-character PAN number"
+    )
 
 
 class PANVerificationResponse(BaseModel):

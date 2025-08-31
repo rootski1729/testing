@@ -1,9 +1,11 @@
 # models.py
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class SMSRequest(BaseModel):
+    plugin_uid: str = Field(..., description="UID of the plugin to use")
     mobile: str = Field(..., description="Recipient mobile number (without +91)")
     text: str = Field(..., description="Message content")
     senderName: str = Field(..., description="Sender ID approved on DLT")
@@ -15,4 +17,3 @@ class SMSResponse(BaseModel):
     success: bool
     message: Optional[str] = None
     code: Optional[int] = None
-    response_id: Optional[str] = None

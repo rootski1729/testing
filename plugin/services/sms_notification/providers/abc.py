@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+
 from ..models import SMSRequest, SMSResponse
 
 if TYPE_CHECKING:
@@ -11,5 +12,5 @@ class AbstractSMSProvider(ABC):
         self.plugin = plugin
 
     @abstractmethod
-    def send_sms(self, plugin: "Plugin", request: SMSRequest) -> SMSResponse:
+    def run(self, plugin: "Plugin", request: SMSRequest) -> SMSResponse:
         pass

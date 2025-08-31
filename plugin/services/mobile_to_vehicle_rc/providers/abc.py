@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from ..models import (
-    MobileToVehicleRCRequest,
-    MobileToVehicleRCResponse,
-)
+
+from ..models import MobileToVehicleRCRequest, MobileToVehicleRCResponse
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
@@ -14,7 +12,7 @@ class AbstractMobileToVehicleRCProvider(ABC):
         self.plugin = plugin
 
     @abstractmethod
-    def fetch_vehicle_rc(
+    def run(
         self, plugin: "Plugin", request: MobileToVehicleRCRequest
     ) -> MobileToVehicleRCResponse:
         pass

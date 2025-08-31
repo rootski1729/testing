@@ -1,8 +1,4 @@
-from .nsdl import NSDL
 from .deepvue import DEEPVUE
+from .nsdl import NSDL
 
-__all__ = [
-    "NSDL",
-    "DEEPVUE"
-
-]
+__all__ = ["NSDL", "DEEPVUE"]

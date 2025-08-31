@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import Plugin
 
 
@@ -36,4 +37,3 @@ class PluginAdmin(admin.ModelAdmin):
     readonly_fields = ("uid", "created_at", "updated_at")
 
     ordering = ("-created_at",)
- 

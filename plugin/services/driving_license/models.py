@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
 from datetime import date
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class DrivingLicenseVerificationRequest(BaseModel):

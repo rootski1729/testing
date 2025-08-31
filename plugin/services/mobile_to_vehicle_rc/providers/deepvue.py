@@ -1,11 +1,12 @@
-import httpx
 from typing import TYPE_CHECKING
-from .abc import AbstractMobileToVehicleRCProvider
+
+import httpx
+
+from plugin.utils.cache_decorator import auto_cached_provider_method
 from plugin.utils.deepvue_auth import DeepvueAuth
-from ..models import (
-    MobileToVehicleRCRequest,
-    MobileToVehicleRCResponse,
-)
+
+from ..models import MobileToVehicleRCRequest, MobileToVehicleRCResponse
+from .abc import AbstractMobileToVehicleRCProvider
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
@@ -17,7 +18,8 @@ class DEEPVUE(AbstractMobileToVehicleRCProvider):
     def __init__(self, plugin: "Plugin"):
         self.auth = DeepvueAuth(plugin.client_id, plugin.client_secret)
 
-    def fetch_vehicle_rc(
+    @auto_cached_provider_method()
+    def run(
         self, plugin: "Plugin", request: MobileToVehicleRCRequest
     ) -> MobileToVehicleRCResponse:
         try:

@@ -1,4 +1,5 @@
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -22,7 +23,9 @@ class AadhaarOTPVerifyRequest(BaseModel):
     reference_id: str = Field(..., description="Reference ID from generate-otp")
     consent: str = Field("Y", description="Consent flag (Y/N)")
     purpose: str = Field("ForKYC", description="Purpose of Aadhaar verification")
-    mobile_number: Optional[str] = Field(None, description="Mobile number used for Aadhaar verification")
+    mobile_number: Optional[str] = Field(
+        None, description="Mobile number used for Aadhaar verification"
+    )
     generate_pdf: bool = False
 
 

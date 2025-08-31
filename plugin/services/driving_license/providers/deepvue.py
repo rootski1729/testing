@@ -1,11 +1,15 @@
-import httpx
 from typing import TYPE_CHECKING
-from .abc import AbstractDrivingLicenseVerificationProvider
+
+import httpx
+
+from plugin.utils.cache_decorator import auto_cached_provider_method
 from plugin.utils.deepvue_auth import DeepvueAuth
+
 from ..models import (
     DrivingLicenseVerificationRequest,
     DrivingLicenseVerificationResponse,
 )
+from .abc import AbstractDrivingLicenseVerificationProvider
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
@@ -17,7 +21,8 @@ class DEEPVUE(AbstractDrivingLicenseVerificationProvider):
     def __init__(self, plugin: "Plugin"):
         self.auth = DeepvueAuth(plugin.client_id, plugin.client_secret)
 
-    def verify_driving_license(
+    @auto_cached_provider_method(exclude_fields=["dob"])
+    def run(
         self, plugin: "Plugin", request: DrivingLicenseVerificationRequest
     ) -> DrivingLicenseVerificationResponse:
         try:

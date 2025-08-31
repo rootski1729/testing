@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
-from .abc import AbstractBankAccountVerificationProvider
+
+from plugin.utils.cache_decorator import auto_cached_provider_method
 from plugin.utils.deepvue_auth import DeepvueAuth
-from ..models import (
-    BankAccountVerificationRequest,
-    BankAccountVerificationResponse,
-)
+
+from ..models import BankAccountVerificationRequest, BankAccountVerificationResponse
+from .abc import AbstractBankAccountVerificationProvider
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
@@ -16,18 +16,21 @@ class DEEPVUE(AbstractBankAccountVerificationProvider):
     def __init__(self, plugin: "Plugin"):
         self.auth = DeepvueAuth(plugin.client_id, plugin.client_secret)
 
-    def verify_bank_account(
+    @auto_cached_provider_method()
+    def run(
         self, plugin: "Plugin", request: BankAccountVerificationRequest
     ) -> BankAccountVerificationResponse:
         try:
             response = self.auth.make_request(
                 "GET",
                 "/v1/verification/bankaccount",
-                params=request.model_dump(),   
+                params=request.model_dump(),
             )
             response_payload = {
                 "success": True if response.get("code") == 200 else False,
-                "message": response.get("data", {}).get("message", "Verification completed"),
+                "message": response.get("data", {}).get(
+                    "message", "Verification completed"
+                ),
                 "code": response.get("code"),
                 "timestamp": response.get("timestamp"),
                 "transaction_id": response.get("transaction_id"),

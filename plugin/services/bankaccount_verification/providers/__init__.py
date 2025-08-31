@@ -1,5 +1,3 @@
 from .deepvue import DEEPVUE
 
-__all__ = [
-    "DEEPVUE"
-    ]
+__all__ = ["DEEPVUE"]

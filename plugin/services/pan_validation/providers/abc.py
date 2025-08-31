@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+
 from ..models import PANVerificationRequest, PANVerificationResponse
 
 if TYPE_CHECKING:
@@ -11,7 +12,7 @@ class AbstractPANValidationProvider(ABC):
         self.plugin = plugin
 
     @abstractmethod
-    def validate_pan(
+    def run(
         self, plugin: "Plugin", request: PANVerificationRequest
     ) -> PANVerificationResponse:
         pass

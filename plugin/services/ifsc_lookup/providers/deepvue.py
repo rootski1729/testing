@@ -1,11 +1,16 @@
-import httpx
 from typing import TYPE_CHECKING
-from .abc import AbstractIFSCVerificationProvider
+
+import httpx
+
 from plugin.utils.deepvue_auth import DeepvueAuth
+
 from ..models import IFSCVerificationRequest, IFSCVerificationResponse
+from .abc import AbstractIFSCVerificationProvider
 
 if TYPE_CHECKING:
     from plugin.models import Plugin
+
+from plugin.utils.cache_decorator import auto_cached_provider_method
 
 
 class DEEPVUE(AbstractIFSCVerificationProvider):
@@ -15,7 +20,8 @@ class DEEPVUE(AbstractIFSCVerificationProvider):
         super().__init__(plugin)
         self.auth = DeepvueAuth(plugin.client_id, plugin.client_secret)
 
-    def verify_ifsc(
+    @auto_cached_provider_method()
+    def run(
         self, plugin: "Plugin", request: IFSCVerificationRequest
     ) -> IFSCVerificationResponse:
         try:

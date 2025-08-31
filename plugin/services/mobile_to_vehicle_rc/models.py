@@ -1,9 +1,12 @@
+from typing import Any, Dict, Optional
+
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
 
 
 class MobileToVehicleRCRequest(BaseModel):
-    mobile_number: str = Field(..., max_length=15, description="Mobile number to fetch Vehicle RC")
+    mobile_number: str = Field(
+        ..., max_length=15, description="Mobile number to fetch Vehicle RC"
+    )
 
 
 class MobileToVehicleRCResponse(BaseModel):

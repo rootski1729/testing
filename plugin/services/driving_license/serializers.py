@@ -14,7 +14,7 @@ class DrivingLicenseVerificationResponseSerializer(serializers.Serializer):
 
     # DL Details
     id_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    name = serializers.CharField(required=False, allow_null=True,allow_blank = True)
+    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     dob = serializers.CharField(required=False, allow_null=True)
     relatives_name = serializers.CharField(required=False, allow_null=True)
     address = serializers.CharField(required=False, allow_null=True)

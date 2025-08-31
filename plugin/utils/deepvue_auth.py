@@ -1,6 +1,7 @@
-import httpx
-from typing import Optional, Dict, Any
 import time
+from typing import Any, Dict, Optional
+
+import httpx
 
 
 class DeepvueAuth:
@@ -19,7 +20,6 @@ class DeepvueAuth:
             "client_secret": self.client_secret,
         }
 
-        
         resp = httpx.post(url, data=data)
         resp.raise_for_status()
         body = resp.json()
@@ -34,8 +34,6 @@ class DeepvueAuth:
             self._token_expiry = int(time.time()) + (23 * 60 * 60)
 
         return True if self._access_token else False
-
-       
 
     def get_access_token(self) -> Optional[str]:
         if not self._access_token or (
@@ -55,15 +53,13 @@ class DeepvueAuth:
         json: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         token = self.get_access_token()
-        
-        
-        
+
         if not token:
             return {
                 "success": False,
                 "sub_code": "AUTH_FAILED",
                 "message": "Authentication failed, no token received",
-                "data": {}
+                "data": {},
             }
 
         url = f"{self.BASE_URL}{endpoint}"
@@ -86,12 +82,12 @@ class DeepvueAuth:
                 "success": False,
                 "sub_code": "HTTP_ERROR",
                 "message": f"HTTP {e.response.status_code}: {e.response.text}",
-                "data": {}
+                "data": {},
             }
         except Exception as e:
             return {
                 "success": False,
                 "sub_code": "REQUEST_FAILED",
                 "message": f"Request failed: {str(e)}",
-                "data": {}
+                "data": {},
             }
