@@ -1,0 +1,5 @@
+# Example Terraform variables
+client_name = "TestClient"
+plan        = "SaaS"
+env         = "dev"
+subdomain   = "test"
